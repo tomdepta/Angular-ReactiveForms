@@ -1,7 +1,19 @@
 import { Component, OnInit } from '@angular/core';
-import { FormGroup, FormBuilder } from '@angular/forms';
+import {
+  FormGroup,
+  FormBuilder,
+  Validators,
+  AbstractControl
+} from '@angular/forms';
 
 import { Customer } from './customer';
+
+function ratingRangeValidator(c: AbstractControl): { [key: string]: boolean } {
+  const value = c.value;
+  return value !== undefined && (isNaN(value) || value < 1 || value > 5)
+    ? { range: true }
+    : null;
+}
 
 @Component({
   selector: 'app-customer',
@@ -16,9 +28,12 @@ export class CustomerComponent implements OnInit {
 
   ngOnInit() {
     this.customerForm = this._formBuilder.group({
-      firstName: '',
-      lastName: '',
-      email: '',
+      firstName: ['', [Validators.required, Validators.minLength(3)]],
+      lastName: ['', [Validators.required, Validators.maxLength(50)]],
+      email: ['', [Validators.required]],
+      phone: '',
+      notification: 'email',
+      rating: ['', ratingRangeValidator],
       sendCatalog: true
     });
   }
@@ -33,5 +48,15 @@ export class CustomerComponent implements OnInit {
       firstName: 'Andrzej',
       lastName: 'Golota'
     });
+  }
+
+  setNotification(notificationMethod: string) {
+    const phoneControl = this.customerForm.controls.phone;
+    if (notificationMethod === 'text') {
+      phoneControl.setValidators(Validators.required);
+    } else {
+      phoneControl.clearValidators();
+    }
+    phoneControl.updateValueAndValidity();
   }
 }
